@@ -9,8 +9,8 @@ Author: Stephen "TheCodeAssassin" Hoogendijk
 
 To test the application you would need Docker and Docker-Compose installed locally.
 
-Docker installation: https://docs.docker.com/engine/installation/ubuntulinux/
-Docker-compose installation: https://docs.docker.com/compose/install/
+* Docker installation: https://docs.docker.com/engine/installation/ubuntulinux/
+* Docker-compose installation: https://docs.docker.com/compose/install/
 
 Then run:
 
@@ -23,8 +23,8 @@ $ docker-compose up
 ### The infra
 First you would have to install Terraform and Ansible.
 
-Terraform: https://terraform.io/downloads.html
-Ansible: http://docs.ansible.com/ansible/intro_installation.html
+* Terraform: https://terraform.io/downloads.html
+* Ansible: http://docs.ansible.com/ansible/intro_installation.html
 
 
 You need to have a config.tf file so that Terraform can connect to your AWS account. Copy the config.tf.example file
@@ -65,11 +65,6 @@ Test the config:
 ./ec2.py --list
 ```
 
-So now we need to add the SSL certificate to the ansible folder. You can generate one by running:
-
-```
-$ openssl genrsa -des3 -out elasticsearch.key 1024
-```
 
 Now... run the provisioner(s), make some coffee (or tea).
 

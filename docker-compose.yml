@@ -1,0 +1,12 @@
+hatchup:
+  build: .
+  ports:
+    - "8000:80"
+  links:
+    - elasticsearch
+
+elasticsearch:
+  image: tutum/elasticsearch
+  environment:
+    - ELASTICSEARCH_USER=test
+    - ELASTICSEARCH_PASS=test

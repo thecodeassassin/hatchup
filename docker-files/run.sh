@@ -1,9 +1,7 @@
 #!/bin/bash
 
-if [ -z $USER ] || [ -z $GROUP ] ; then
-   echo "Please set the USER and GROUP env variables"
-   exit
-fi
+USER=www-data
+GROUP=www-data
 
 # let apache run as the user running the container
 

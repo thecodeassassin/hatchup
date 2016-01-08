@@ -26,11 +26,6 @@ class Config implements \ArrayAccess
         if ($instance === null) {
             $instance = new Config();
 
-            if (!defined('CONFIG_DIR')) {
-                // we need the constants to get the config
-                require_once __DIR__ . '/../../../../../constants.php';
-            }
-
             // store the params
             $instance->params = $instance->processParameters('parameters.ini');
         }

@@ -19,7 +19,14 @@ resource "aws_instance" "web" {
     user = "ubuntu"
   }
 
-  instance_type = "t2.micro"
+  # name the hosts so we can manage them with ansible
+  tags {
+    Name = "${format("web-%03d", count.index + 1)}"
+  }
+
+  # instance type is t2.micro by default
+  instance_type = "${var.instance_type}"
+
   ami = "${lookup(var.aws_amis, var.aws_region)}"
   key_name = "${var.key_name}"
   vpc_security_group_ids = ["${aws_security_group.default.id}"]

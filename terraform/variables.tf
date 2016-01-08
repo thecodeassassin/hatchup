@@ -17,9 +17,17 @@ variable "aws_region" {
   default = "eu-central-1"
 }
 
+variable "instance_type" {
+  default = "t2.micro"
+}
+
 # Ubuntu 14.04 LTS
 variable "aws_amis" {
   default = {
     eu-central-1 = "ami-accff2b1"
   }
+}
+
+variable "mysql_root_password" {
+  description = "The desired mysql root password"
 }

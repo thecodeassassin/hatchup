@@ -36,8 +36,8 @@ RUN locale-gen en_US en_US.utf8 de_DE de_DE.utf8 nl_NL nl_NL.utf8
 # Add image configuration and scripts
 ADD docker-files/run.sh /run.sh
 ADD docker-files/data /
+ADD . /app
 
 RUN chmod 755 /*.sh
-
 
 CMD ["/run.sh"]

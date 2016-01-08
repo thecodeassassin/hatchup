@@ -1,0 +1,8 @@
+---
+- hosts: Tag_web
+  sudo: yes
+
+  roles:
+    - { role: hatchup.web }
+    - { role: geerlingguy.nginx  }
+    - { role: nbz4live.php-fpm  }

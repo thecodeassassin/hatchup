@@ -7,15 +7,11 @@ Author: Stephen "TheCodeAssassin" Hoogendijk
 
 ## Testing/Development
 
-To test the application you would need Docker and Docker-Compose installed locally.
-
-* Docker installation: https://docs.docker.com/engine/installation/ubuntulinux/
-* Docker-compose installation: https://docs.docker.com/compose/install/
-
-Then run:
+Local testing will be done using Vagrant. Vagrant will spin up a machine (either locally or remotely) and use that
+instance to serve your code.
 
 ```
-$ docker-compose up
+$ vagrant up
 ```
 
 ## To deploy the application stack to AWS
@@ -34,8 +30,15 @@ You need to provide a public key name and the path to your a local public key.
 *Important*: The key needs to already be present in AWS EC2.
 
 Obviously you need to replace "hatchup" with your own key name and path.
+I created a script to make it easier to interact with terraform.
 
-*Note* This step might include the consumption of coffee/tea since it WILL take a while
+*Note* This step might include the consumption of coffee/tea since it WILL take a while.
+
+The script will do two things when running apply:
+
+1) Create the infrastructure in AWS
+2) Provision the infrastructure
+
 ```
 
 $ cd terraform
@@ -44,9 +47,19 @@ $ cd terraform
 $ terraform get
 
 # now apply the infrastructure
-$ terraform apply -var 'key_name=hatchup' -var 'public_key_path=/Users/hatchup/.ssh/hatchup.pub'
+$ bash terraform/run.sh apply stephen ~/.ssh/stephen.pub
 
 ```
+
+### Destroying the infrastructure
+
+Should you need to destroy all the managed infrastructure (this is considered catastrophic in a live scenario). You need
+to run the same script as above but using the destroy operation.
+
+```
+$ bash terraform/run.sh destroy stephen ~/.ssh/stephen.pub
+```
+
 
 ### The provisioning
 
@@ -63,6 +76,12 @@ Test the config:
 
 ```
 ./ec2.py --list
+```
+
+First make sure you install all the role dependencies.
+
+```
+$ bash ansible/install.sh
 ```
 
 

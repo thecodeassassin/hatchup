@@ -18,11 +18,14 @@
     "require-dev": {
         "phpunit/phpunit": "~5.1"
     },
-    "license": "MIT",
+    "license": "Apache-2.0",
     "authors": [
         {
             "name": "Stephen Hoogendijk",
             "email": "stephen@tca0.nl"
         }
-    ]
+    ],
+    "autoload": {
+        "psr-0": {"": "src/"}
+    }
 }

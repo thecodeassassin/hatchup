@@ -19,7 +19,15 @@ resource "aws_route" "internet_access" {
 # Create a subnet to launch our instances into
 resource "aws_subnet" "default" {
   vpc_id                  = "${aws_vpc.default.id}"
+  availability_zone       = "${var.aws_region}a"
   cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+}
+
+resource "aws_subnet" "backup" {
+  vpc_id                  = "${aws_vpc.default.id}"
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = "${var.aws_region}b"
   map_public_ip_on_launch = true
 }
 
@@ -69,10 +77,18 @@ resource "aws_security_group" "default" {
     cidr_blocks = ["10.0.0.0/16"]
   }
 
-  # Elastisearch access from the VPC
+  # Elasticsearch access from the VPC
   ingress {
     from_port   = 9200
     to_port     = 9200
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  # MySQL access from the VPC
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
     protocol    = "tcp"
     cidr_blocks = ["10.0.0.0/16"]
   }

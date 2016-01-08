@@ -4,9 +4,11 @@ hatchup:
     - "8000:80"
   links:
     - elasticsearch
+  environment:
+    - "APPLICATION_ENV=development"
 
 elasticsearch:
   image: tutum/elasticsearch
   environment:
-    - ELASTICSEARCH_USER=test
-    - ELASTICSEARCH_PASS=test
+    - "ELASTICSEARCH_USER=test"
+    - "ELASTICSEARCH_PASS=test"

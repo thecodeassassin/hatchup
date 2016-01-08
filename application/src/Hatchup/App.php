@@ -5,10 +5,12 @@
 
 namespace Hatchup;
 
+use Hatchup\Handlers\NotFound;
 use Monolog\Handler\StreamHandler;
 use \Slim\App as SlimApp;
 use \Hatchup\App\Config as Config;
 use \Hatchup\App\Exception as Exception;
+use Slim\Views\Twig;
 use Slim\Views\TwigExtension;
 
 /**
@@ -28,6 +30,11 @@ class App extends SlimApp
      * @var null
      */
     protected static $instance = null;
+
+    /**
+     * @var Twig
+     */
+    protected $view;
 
     /**
      * {@inheritdoc}
@@ -80,16 +87,20 @@ class App extends SlimApp
     /**
      * @param string $name
      *
-     * @return Log
+     * @return \Monolog\Logger
      */
     public static function openLog($name)
     {
         $logWriter = static::getLogWriter($name);
         $app = static::getInstance();
 
-        $app['Logger'] = function() use ($logWriter) {
-            return $logWriter;
-        };
+        if ($app) {
+            $app['Logger'] = function () use ($logWriter) {
+                return $logWriter;
+            };
+        }
+
+        return $logWriter;
     }
 
     /**
@@ -107,7 +118,7 @@ class App extends SlimApp
 
         // Register component on container
         $container['view'] = function ($container) {
-            $view = new \Slim\Views\Twig('\Hatchup\src\Views', [
+            $view = new Twig('\Hatchup\src\Views', [
                 'cache' => CACHE_DIR . '/views'
             ]);
             $view->addExtension(new TwigExtension(
@@ -118,9 +129,16 @@ class App extends SlimApp
             return $view;
         };
 
-        // register the errorHandler
+        // register handlers
         $app['errorHandler'] = function ($container) {
             return new Handlers\Error($container['Logger']);
+        };
+
+        $app['notFoundHandler'] = function ($container) {
+            return new NotFound($container['view'], function ($request, $response) use ($container) {
+                return $container['response']
+                    ->withStatus(404);
+            });
         };
     }
 
@@ -131,10 +149,6 @@ class App extends SlimApp
      */
     public static function getInstance()
     {
-        if (!is_object(static::$instance)) {
-            throw new Exception('No instance of \Hatchup\App was initialized');
-        }
-
         return static::$instance;
     }
 }

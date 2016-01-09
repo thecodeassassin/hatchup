@@ -1,5 +1,6 @@
 [database]
-mysql_user = root
+mysql_host = "MYSQL_HOST"
+mysql_user = "root"
 mysql_pass = "MYSQL_PASSWORD"
 
 [elasticsearch]

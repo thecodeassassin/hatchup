@@ -3,7 +3,7 @@ output "web_address" {
 }
 
 output "es_address" {
-  value = ""
+  value = "${aws_elb.es.dns_name}"
 }
 
 output "mysql_address" {

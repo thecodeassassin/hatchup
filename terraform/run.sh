@@ -13,6 +13,13 @@ echo
 
 GLEXEC=$(which ansible-galaxy)
 
+change_config_entry() {
+ SEARCH=$(printf "%q" "$1" )
+ REPLACE=$(printf "%q" "$2" )
+
+ `sed -i'' -e "s/$SEARCH/$REPLACE/g" ${CONFIG_PATH}/config.ini`
+}
+
 if [ $? = 1 ]; then
   echo
   echo "ansible-galaxy not found, please make sure you have ansible 1.9+ installed."
@@ -40,17 +47,18 @@ if [[ $1 = "" ]] || [[ $2 = "" ]] ; then
 fi
 
 if [ ! -e ${CONFIG_PATH}/config.ini ] ; then
+    echo
     echo "=> Creating config.ini file for the application"
 
     cp ${CONFIG_PATH}/config.ini.template ${CONFIG_PATH}/config.ini
 
     # set the mysql root user password
-    `sed -i'' -e "s/MYSQL_PASSWORD/${MYSQL_PASSWORD}/g" ${CONFIG_PATH}/config.ini`
+    change_config_entry "MYSQL_PASSWORD" "${MYSQL_PASSWORD}"
 else
     # use the mysql password from the configuration file
-    MYSQL_PASSWORD=$(sed -n 's/mysql_pass = "\(.*\)"/\1/p' ${CONFIG_PATH}/config.ini)
-    AWS_ACCESS_KEY=$(sed -n 's/access_key = "\(.*\)"/\1/p' config.tf)
-    AWS_SECRET_KEY=$(sed -n 's/secret_key = "\(.*\)"/\1/p' config.tf)
+    MYSQL_PASSWORD=$(sed -n 's/mysql_pass = "\(.*\)"/\1/p' ${CONFIG_PATH}/config.ini | xargs)
+    AWS_ACCESS_KEY=$(sed -n 's/access_key = "\(.*\)"/\1/p' config.tf | xargs)
+    AWS_SECRET_KEY=$(sed -n 's/secret_key = "\(.*\)"/\1/p' config.tf | xargs)
 fi
 
 # export the AWS credentials for ansible
@@ -58,23 +66,30 @@ export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY}"
 export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_KEY}"
 
 echo "=> Running terraform..."
-#terraform ${OPERATION} -var "key_name=${KEY_NAME}" -var "public_key_path=${KEY_PATH}" -var "mysql_root_password=${MYSQL_PASSWORD}"
+terraform ${OPERATION} -var "key_name=${KEY_NAME}" -var "public_key_path=${KEY_PATH}" -var "mysql_root_password=${MYSQL_PASSWORD}"
 
-if [ -e terraform.tfstate ] && [ $? = 0 ]; then
+if [ -e terraform.tfstate ] && [ $? = 0 ] && [[ ${OPERATION} = "apply" ]]; then
     echo
     echo "=> Writing configuration values..."
     echo
+
     MYSQL_HOST=$(terraform output mysql_address)
-    mysql_host = ""
+    ES_HOST=$(terraform output es_address)
+
+    change_config_entry "MYSQL_HOST" "${MYSQL_HOST}"
+    change_config_entry "ELASTICSEARCH_HOST" "${ES_HOST}"
 
     # install ansible requirements
     echo "=> Installing ansible requirements"
     echo
     $GLEXEC install -f -r ../ansible/requirements.txt
 
+    #   make sure boto is installed
+    pip install boto
+
     echo "=> Running ansible..."
     echo
-    ansible-playbook ansible/main.yml -i ec2.py -u ubuntu eu-central-1
+    ansible-playbook ../ansible/playbook.yml -i ../ec2.py -u ubuntu
 else
     echo "=> Terraform failed to ${OPERATION}"
 fi

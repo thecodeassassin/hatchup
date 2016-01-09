@@ -1,8 +1,0 @@
-[database]
-mysql_user = root
-mysql_pass = "MYSQL_PASSWORD"
-
-[elasticsearch]
-elasticsearch_host = "ELASTICSEARCH_HOST"
-elasticsearch_user = "ELASTICSEARCH_USER"
-elasticsearch_pass = "ELASTICSEARCH_PASS"

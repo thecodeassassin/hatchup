@@ -1,2 +1,41 @@
 ---
-# tasks file for thecodeassassin.web
+
+- name: Installing php5-curl
+  apt: name=php5-curl state=present update_cache=yes
+
+- name: Installing php5-cli
+  apt: name=php5-cli state=present
+
+- name: Setting proper owner of web root
+  file: path={{ www_dir }} state=directory recurse=yes owner=www-data group=www-data
+
+- name: Copy application
+  synchronize:
+    src: ../application/
+    dest: /var/www
+    rsync_path: "sudo rsync"
+    rsync_opts:
+      - "--no-motd"
+      - "--exclude=.git"
+      - "--exclude=vendor"
+
+- name: Configure logs dir
+  file: path={{ www_dir }}/app/logs state=directory recurse=yes owner=www-data group=www-data mode=0755
+
+- name: Configure cache dir
+  file: path={{ www_dir }}/app/cache state=directory recurse=yes owner=www-data group=www-data mode=0755
+
+- name: Install composer
+  shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin creates=/usr/local/bin/composer
+  tags: composer
+
+- name: rename composer.phar to composer
+  shell: mv /usr/local/bin/composer.phar /usr/local/bin/composer creates=/usr/local/bin/composer
+  tags: composer
+
+- name: make composer executable
+  file: path=/usr/local/bin/composer mode=a+x state=file
+  tags: composer
+
+- name: Installing application dependencies
+  composer: command=install working_dir={{ www_dir }}

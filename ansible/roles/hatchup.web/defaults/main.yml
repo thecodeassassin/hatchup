@@ -1,2 +1,6 @@
 ---
-# defaults file for thecodeassassin.web
+
+php_error_reporting: "E_ALL & ~E_STRICT"
+php_display_errors: "Off"
+php_display_startup_errors: "Off"
+www_dir: /var/www

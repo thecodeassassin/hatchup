@@ -74,9 +74,11 @@ if [ -e terraform.tfstate ] && [ $? = 0 ] && [[ ${OPERATION} = "apply" ]]; then
     echo
 
     MYSQL_HOST=$(terraform output mysql_address)
+    MYSQL_PORT=$(terraform output mysql_port)
     ES_HOST=$(terraform output es_address)
 
     change_config_entry "MYSQL_HOST" "${MYSQL_HOST}"
+    change_config_entry "MYSQL_PORT" "${MYSQL_PORT}"
     change_config_entry "ELASTICSEARCH_HOST" "${ES_HOST}"
 
     # install ansible requirements

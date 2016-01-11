@@ -1,0 +1,31 @@
+{
+    "name": "thecodeassassin/hatchup",
+    "description": "Sample meetup app using ElasticSearch",
+    "type": "web application",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/thecodeassassin/slim-routing-manager.git"
+        }
+    ],
+    "require": {
+        "slim/slim": "~3.0",
+        "elasticsearch/elasticsearch": "~2.1",
+        "aws/aws-sdk-php": "~3.12",
+        "monolog/monolog": "^1.17",
+        "slim/twig-view": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~5.1"
+    },
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Stephen Hoogendijk",
+            "email": "stephen@tca0.nl"
+        }
+    ],
+    "autoload": {
+        "psr-0": {"": "src/"}
+    }
+}

@@ -1,5 +1,6 @@
 [database]
 mysql_host = "MYSQL_HOST"
+mysql_port = "MYSQL_PORT"
 mysql_user = "root"
 mysql_pass = "MYSQL_PASSWORD"
 

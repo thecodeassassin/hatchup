@@ -1,2 +1,54 @@
 ---
-# vars file for thecodeassassin.web
+# default php-fpm pool required for hatchup
+php_fpm_pools:
+  - name: hatchup
+    user: www-data
+    group: www-data
+    listen: 9000
+    chdir: /
+
+nginx_vhosts:
+  - listen: "80"
+    server_name: "hatchup"
+    root: "{{ www_dir }}/web"
+    index: "index.php"
+    access_log: "{{ www_dir }}/app/logs/access.log"
+    error_log: "{{ www_dir }}/app/logs/error.log"
+    extra_parameters: |
+      location / {
+          try_files $uri $uri/ /index.php?$query_string;
+      }
+
+      location ~ \.php$ {
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass    127.0.0.1:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include /etc/nginx/fastcgi_params;
+      }
+
+      location ~ /\.ht {
+          deny all;
+      }
+
+      location ^~ /config {
+        deny all;
+      }
+
+php_fpm_ini:
+   # PHP section directives
+   - option: "engine"
+     section: "PHP"
+     value: "1"
+   - option: "error_reporting"
+     section: "PHP"
+     value: "{{ php_error_reporting }}"
+   - option: "display_errors"
+     section: "PHP"
+     value: "{{ php_display_errors }}"
+   - option: "display_startup_errors"
+     section: "PHP"
+     value: "{{ php_display_startup_errors }}"
+   - option: "date.timezone"
+     section: "PHP"
+     value: "UTC"

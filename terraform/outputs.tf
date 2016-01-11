@@ -9,4 +9,6 @@ output "es_address" {
 output "mysql_address" {
   value = "${aws_db_instance.default.address}"
 }
-
+output "mysql_port" {
+  value = "${aws_db_instance.default.port}"
+}

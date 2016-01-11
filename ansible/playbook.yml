@@ -2,6 +2,9 @@
 - hosts: tag_Group_web
   sudo: yes
 
+  vars:
+    www_dir: "/var/www"
+
   roles:
     - { role: hatchup.web }
     - { role: geerlingguy.nginx  }
@@ -12,25 +15,14 @@
   sudo: yes
 
   vars:
-    elasticsearch_heap_size: 1g
+    elasticsearch_network_host: 0.0.0.0
+    elasticsearch_heap_size: 256m
     elasticsearch_max_open_files: 65535
     elasticsearch_max_locked_memory: unlimited
     elasticsearch_timezone: "Europe/Amsterdam"
     elasticsearch_cluster_name: elasticsearch-hatchup
-    elasticsearch_node_max_local_storage_nodes: 1
-    elasticsearch_index_mapper_dynamic: "true"
-    elasticsearch_memory_bootstrap_mlockall: "true"
-    elasticsearch_gateway_type: local
-    elasticsearch_gateway_recover_after_nodes: 1
-    elasticsearch_gateway_recover_after_time: 2m
-    elasticsearch_gateway_expected_nodes: 1
-    elasticsearch_discovery_zen_minimum_master_nodes: 1
-    elasticsearch_discovery_zen_ping_timeout: 30s
-    elasticsearch_discovery_zen_ping_multicast_enabled: "true"
     elasticsearch_misc_auto_create_index: "true"
-    elasticsearch_misc_query_bool_max_clause_count: 4096
-    elasticsearch_misc_disable_delete_all_indices: "true"
-    elasticsearch_java_opts: "-XX:-UseSuperWord"
+    elasticsearch_java_opts: "-Djava.net.preferIPv4Stack=true"
 
   roles:
-    - { role: gpstathis.elasticsearch }
+    - { role: hatchup.es }

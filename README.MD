@@ -10,6 +10,8 @@ Author: Stephen "TheCodeAssassin" Hoogendijk
 Local testing will be done using Vagrant. Vagrant will spin up a machine (either locally or remotely) and use that
 instance to serve your code.
 
+*Note* You need at least Vagrant 1.8.1
+
 ```
 $ vagrant up
 ```
@@ -61,45 +63,14 @@ $ bash terraform/run.sh destroy stephen ~/.ssh/stephen.pub
 ```
 
 
-### The provisioning
-
-Now that we have our infra ready we should start provisioning. For this we use Ansible.
-
-Configure the AWS access and Secret key
-```
-$ export AWS_ACCESS_KEY_ID='123456'
-$ export AWS_SECRET_ACCESS_KEY='bigsecret123'
-
-```
-
-Test the config:
-
-```
-./ec2.py --list
-```
-
-First make sure you install all the role dependencies.
-
-```
-$ bash ansible/install.sh
-```
-
-
-Now... run the provisioner(s), make some coffee (or tea).
-
-```
-
-$ ansible-playbook ansible/main.yml -i ec2.py -u ubuntu eu-central-1
-
-```
-
-
 ## What i would do to improve this
 
-* Replace the local sqlite user database with a MariaDB Galera cluster
 * Not put everything in one repo but separate it properly and on a self-hosted Gitlab or Stash
 * Add more features of course
 * Maybe use ElasticSearch Shield for additional security should the VPC be breached
+* Improve ansible playbooks
+* Installing the application via a CI instead of copy with ansible
+* Write unit tests for the application
 
 ## Why did i pick these technologies?
 
@@ -120,7 +91,7 @@ Edit "count = x" in the terraform/web-nodes.tf file.
 
 # Monitoring?
 
-The nodes are provisioned with Telegraf installed that will send data to the InfluxDB node.
+
 
 # What about security?
 

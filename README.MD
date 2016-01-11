@@ -38,15 +38,10 @@ I created a script to make it easier to interact with terraform.
 
 The script will do two things when running apply:
 
-1) Create the infrastructure in AWS
-2) Provision the infrastructure
+1. Create the infrastructure in AWS
+2. Provision the infrastructure
 
 ```
-
-$ cd terraform
-
-# first we need to update the terraform modules
-$ terraform get
 
 # now apply the infrastructure
 $ bash terraform/run.sh apply stephen ~/.ssh/stephen.pub

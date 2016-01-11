@@ -92,7 +92,8 @@ if [ -e terraform.tfstate ] && [ $? = 0 ] && [[ ${OPERATION} = "apply" ]]; then
     echo "=> Running ansible..."
     echo
     ansible-playbook ../ansible/playbook.yml -i ../ec2.py -u ubuntu
-else
+
+elif [ -e terraform.tfstate ] && [ ! $? = 0 ]; then
     echo "=> Terraform failed to ${OPERATION}"
 fi
 

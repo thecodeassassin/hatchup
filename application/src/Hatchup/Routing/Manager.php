@@ -164,7 +164,7 @@ class Manager
  * on {$date}
  */
 \$modTimes = {$modTimes};
-\$app = Hackup\App::getInstance();
+\$app = Hatchup\App::getInstance();
 
 {$content}
 
@@ -209,9 +209,7 @@ EOD;
                         preg_match_all("/\*\s+@Route\s*\('([^']*)'\)/s", $comments, $params, PREG_SET_ORDER);
 
                         foreach ($params as $route) {
-
                             if ($this->routePrefix && !$noPrefix) {
-
                                 // add a prefix if it was given
                                 $route = $this->routePrefix . $route[1];
 
@@ -221,18 +219,14 @@ EOD;
 
                             preg_match_all("/\*\s+@Method\s*\('([^']*)'\)/s", $comments, $params, PREG_SET_ORDER);
                             $method = isset($params[0][1]) ? strtoupper($params[0][1]) : 'GET';
-                            preg_match_all("/\*\s+@Name\s*\('([^']*)'\)/s", $comments, $params, PREG_SET_ORDER);
-                            $name = strtolower($params[0][1]);
-
 
                             $result .= str_replace('\\', '\\\\', sprintf(
-                                '$app->map("%s", "%s\%s:%s")->via("%s")->name("%s");' . PHP_EOL,
+                                '$app->map(["%s"], "%s", "%s\%s:%s");' . PHP_EOL,
+                                str_replace(',', '","', $method),
                                 $route,
                                 $this->baseNameSpace,
                                 $className,
-                                $functionName,
-                                str_replace(',', '","', $method),
-                                $name
+                                $functionName
                             ));
                         }
 

@@ -5,7 +5,11 @@
 
 namespace Hatchup\App;
 
-
+/**
+ * Class Exception
+ *
+ * @package Hatchup\App
+ */
 class Exception extends \Exception
 {
 

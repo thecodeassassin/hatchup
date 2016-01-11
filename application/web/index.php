@@ -31,8 +31,9 @@ try {
 
 } catch (\Exception $e) {
     if (is_writable(LOG_DIR)) {
-        $log = App::openLog('error');
+        $log = App::openLog('app.error');
         $log->crit($e);
+        echo "<h1>A critical error occured, our apologies for the inconvience.</h1>";
     }
     exit(1);
 }

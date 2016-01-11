@@ -6,5 +6,6 @@ mysql_pass = "MYSQL_PASSWORD"
 
 [elasticsearch]
 elasticsearch_host = "ELASTICSEARCH_HOST"
+elasticsearch_port = 9200
 elasticsearch_user = "ELASTICSEARCH_USER"
 elasticsearch_pass = "ELASTICSEARCH_PASS"

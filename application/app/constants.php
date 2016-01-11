@@ -8,3 +8,4 @@ define('CONFIG_DIR', realpath(APPLICATION_DIR . '/config'));
 define('CACHE_DIR', realpath(APPLICATION_DIR . '/cache'));
 define('LOG_DIR', realpath(APPLICATION_DIR . '/logs'));
 define('CONTROLLER_DIR', realpath(__DIR__ . '/../src/Hatchup/Controller'));
+define('VIEWS_DIR', realpath(__DIR__ . '/../src/Hatchup/Views'));

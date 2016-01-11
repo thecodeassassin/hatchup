@@ -12,8 +12,8 @@ nginx_vhosts:
     server_name: "hatchup"
     root: "{{ www_dir }}/web"
     index: "index.php"
-    access_log: "{{ www_dir }}/app/logs/access.log"
-    error_log: "{{ www_dir }}/app/logs/error.log"
+    access_log: "{{ www_dir }}/app/logs/nginx.access.log"
+    error_log: "{{ www_dir }}/app/logs/nginx.error.log"
     extra_parameters: |
       location / {
           try_files $uri $uri/ /index.php?$query_string;

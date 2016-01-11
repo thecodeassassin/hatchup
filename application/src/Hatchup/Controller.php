@@ -4,13 +4,12 @@
  */
 
 namespace Hatchup;
-use JsonSchema\Validator;
 
+use Elasticsearch\Client;
+use Slim\Container;
 use Slim\Http\Request;
 use Slim\Http\Response;
-use Slim\Log;
-use Slim\App;
-
+use Hatchup\App;
 
 /**
  * Class BaseController
@@ -20,19 +19,9 @@ use Slim\App;
 abstract class Controller
 {
     /**
-     * @var Response
-     */
-    protected $response;
-
-    /**
-     * @var Request
-     */
-    protected $request;
-
-    /**
      * @var App
      */
-    protected $app;
+    public $app;
 
     /**
      * @var array
@@ -40,27 +29,21 @@ abstract class Controller
     protected $config;
 
     /**
-     * @var Json\Response $jsonResponse
+     * @var Container
      */
-    protected $jsonResponse;
-
-    /**
-     * @var Information
-     */
-    protected $headerInformation;
+    public $container;
 
     /**
      * Base controller constructor
      */
     public function __construct()
     {
-
-
         $this->app = self::getApp();
-        $this->response = $this->app->response;
-        $this->request = $this->app->request;
+        $this->container = $this->app->getContainer();
+
+        $this->response = $this->container->response;
+        $this->request = $this->container->request;
         $this->config = $this->app->getConfig();
-        $this->jsonResponse = $this->app->jsonResponse;
     }
 
     /**
@@ -68,21 +51,40 @@ abstract class Controller
      *
      * @param array $data Array data to output as JSON
      */
-    public function outputJson($data)
+    public function outputJson(array $data)
     {
-        $this->response->body(json_encode($data));
+        $body = $this->response->getBody();
+        $body->write(json_encode($data));
+    }
+
+    /**
+     * @return Client
+     */
+    public function getElasticSearchClient()
+    {
+        return $this->container['elasticsearch'];
     }
 
     /**
      * Get the application's kernel (Slim object)
      *
-     * @param string $name
-     *
      * @return App
      */
-    protected function getApp($name = 'default')
+    protected function getApp()
     {
-        return App::
+        return \Hatchup\App::getInstance();
     }
 
+    /**
+     * Render a view
+     *
+     * @param string $view
+     * @param array  $vars
+     *
+     * @return mixed
+     */
+    protected function render($view, array $vars = [])
+    {
+        return $this->container->view->render($this->container->response, $view, $vars);
+    }
 }

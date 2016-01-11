@@ -84,6 +84,18 @@ your instance go down. Then re-run ansible to provision everything.
 To scale up the web instances:
 Edit "count = x" in the terraform/web-nodes.tf file.
 
+# Infrastructure build
+
+The following infrastructure will be build by the terraform configuration:
+
+* A VPC with a gateway and 2 subnets (one per availability zone)
+* 2 ELB Loadbalancers (one for the application and one for the elasticsearch cluster)
+* 2 Elasticsearch instances (configurable)
+* 2 Application instances (configurable)
+* VPC Security group (for allowing traffic within the VPC)
+* Security group for the Elasticsearch cluster
+* Security group for the application cluster
+
 # Monitoring?
 
 

@@ -5,8 +5,11 @@
 
 namespace Hatchup;
 
+use Elasticsearch\ClientBuilder;
 use Hatchup\Handlers\NotFound;
+use Monolog\Handler\FingersCrossedHandler;
 use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use \Slim\App as SlimApp;
 use \Hatchup\App\Config as Config;
 use \Hatchup\App\Exception as Exception;
@@ -32,9 +35,9 @@ class App extends SlimApp
     protected static $instance = null;
 
     /**
-     * @var Twig
+     * @var bool
      */
-    protected $view;
+    protected $debug = false;
 
     /**
      * {@inheritdoc}
@@ -42,6 +45,10 @@ class App extends SlimApp
     public function __construct($userSettings = [])
     {
         parent::__construct($userSettings);
+
+        if ($userSettings['debug']) {
+            $this->debug = $userSettings['debug'];
+        }
 
         $this->config = Config::getInstance();
 
@@ -67,17 +74,17 @@ class App extends SlimApp
     /**
      * @param $name
      *
-     * @return \Monolog\Logger
+     * @return Logger
      */
     public static function getLogWriter($name)
     {
 
         $filename = LOG_DIR . '/'.$name.'.log';
 
-        $logger = new \Monolog\Logger('logger');
+        $logger = new Logger('logger');
 
-        $stream = new \Monolog\Handler\StreamHandler($filename, \Monolog\Logger::DEBUG);
-        $fingersCrossed = new \Monolog\Handler\FingersCrossedHandler($stream, \Monolog\Logger::ERROR);
+        $stream = new StreamHandler($filename, Logger::DEBUG);
+        $fingersCrossed = new FingersCrossedHandler($stream, Logger::ERROR);
 
         $logger->pushHandler($fingersCrossed);
 
@@ -87,7 +94,7 @@ class App extends SlimApp
     /**
      * @param string $name
      *
-     * @return \Monolog\Logger
+     * @return Logger
      */
     public static function openLog($name)
     {
@@ -95,7 +102,8 @@ class App extends SlimApp
         $app = static::getInstance();
 
         if ($app) {
-            $app['Logger'] = function () use ($logWriter) {
+            $container = $app->getContainer();
+            $container['Logger'] = function () use ($logWriter) {
                 return $logWriter;
             };
         }
@@ -115,11 +123,13 @@ class App extends SlimApp
 
         // Get container
         $container = $this->getContainer();
+        $config = $this->config;
 
         // Register component on container
         $container['view'] = function ($container) {
-            $view = new Twig('\Hatchup\src\Views', [
-                'cache' => CACHE_DIR . '/views'
+            $view = new Twig(VIEWS_DIR, [
+                'cache' => CACHE_DIR . '/views',
+                'auto_reload' => $this->debug
             ]);
             $view->addExtension(new TwigExtension(
                 $container['router'],
@@ -130,15 +140,38 @@ class App extends SlimApp
         };
 
         // register handlers
-        $app['errorHandler'] = function ($container) {
+        $container['errorHandler'] = function ($container) {
             return new Handlers\Error($container['Logger']);
         };
 
-        $app['notFoundHandler'] = function ($container) {
-            return new NotFound($container['view'], function ($request, $response) use ($container) {
-                return $container['response']
-                    ->withStatus(404);
-            });
+        $container['notFoundHandler'] = function ($container) {
+            return function ($request, $response) use ($container) {
+                return $container->view->render($response, 'errors/404.twig')->withStatus(404);
+            };
+        };
+
+        $container['elasticsearch'] = function ($container) use ($config) {
+            if (!empty($config['elasticsearch_user']) && !empty($config['elasticsearch_pass'])) {
+                $host = sprintf(
+                    'http://%s:%s@%s:%d',
+                    $config['elasticsearch_user'],
+                    $config['elasticsearch_pass'],
+                    $config['elasticsearch_host'],
+                    $config['elasticsearch_port']
+                );
+            } else {
+                $host = sprintf(
+                    'http://%s:%s',
+                    $config['elasticsearch_host'],
+                    $config['elasticsearch_port']
+                );
+            }
+            // limit the hosts to one since we access it from a ELB
+            $client = ClientBuilder::create()
+                ->setHosts([$host])
+                ->build();
+
+            return $client;
         };
     }
 

@@ -31,29 +31,6 @@ resource "aws_subnet" "backup" {
   map_public_ip_on_launch = true
 }
 
-# A security group for the ELB so it is accessible via the web
-resource "aws_security_group" "elb" {
-  name        = "hatchup_loadbalancer_sg"
-  description = "Hatchup primary loadbalancer security group"
-  vpc_id      = "${aws_vpc.default.id}"
-
-  # HTTP access from anywhere
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # outbound internet access
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
 # Our default security group to access
 # the instances over SSH and HTTP
 resource "aws_security_group" "default" {
@@ -71,8 +48,17 @@ resource "aws_security_group" "default" {
 
   # HTTP access from the VPC
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = [
+      "10.0.0.0/16"]
+  }
+
+  # MySQL access from the VPC
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
     protocol    = "tcp"
     cidr_blocks = ["10.0.0.0/16"]
   }
@@ -81,14 +67,6 @@ resource "aws_security_group" "default" {
   ingress {
     from_port   = 9200
     to_port     = 9200
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
-  }
-
-  # MySQL access from the VPC
-  ingress {
-    from_port   = 3306
-    to_port     = 3306
     protocol    = "tcp"
     cidr_blocks = ["10.0.0.0/16"]
   }

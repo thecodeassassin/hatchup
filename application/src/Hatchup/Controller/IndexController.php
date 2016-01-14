@@ -6,6 +6,9 @@
 namespace Hatchup\Controller;
 
 use Hatchup\Controller;
+use Slim\Container;
+use Slim\Http\Request;
+use Slim\Http\Response;
 
 /**
  * Class IndexController
@@ -15,9 +18,9 @@ use Hatchup\Controller;
 class IndexController extends Controller
 {
 
-    public function __construct()
+    public function __construct(Container $container)
     {
-        parent::__construct();
+        parent::__construct($container);
     }
 
     /**
@@ -30,12 +33,13 @@ class IndexController extends Controller
      * @return array
      * @throws \Exception
      */
-    public function indexAction()
+    public function indexAction(Request $request, Response $response, $args)
     {
+
         $esClient = $this->getElasticSearchClient();
 
-//        var_dump($esClient->cluster()->health());
+        var_dump($esClient->cluster()->health());
 
-        return $this->render('index.html.twig');
+        return $this->render('index.html.twig', $args);
     }
 }

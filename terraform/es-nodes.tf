@@ -1,9 +1,34 @@
+resource "aws_security_group" "es_elb" {
+  name        = "hatchup_es_loadbalancer_sg"
+  description = "Hatchup ES loadbalancer security group"
+  vpc_id      = "${aws_vpc.default.id}"
+
+  # Elasticsearch access from the VPC
+  ingress {
+    from_port   = 9200
+    to_port     = 9200
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  # outbound internet access
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 resource "aws_elb" "es" {
   name = "hatchup-es-elb"
 
   subnets         = ["${aws_subnet.default.id}"]
-  security_groups = ["${aws_security_group.elb.id}"]
+  security_groups = ["${aws_security_group.es_elb.id}"]
   instances       = ["${aws_instance.es.*.id}"]
+
+  # this loadbalancer is internal only
+  internal = true
 
   listener {
     instance_port     = 9200
@@ -13,6 +38,7 @@ resource "aws_elb" "es" {
   }
 
 }
+
 
 resource "aws_instance" "es" {
   connection {

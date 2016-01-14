@@ -17,7 +17,7 @@ use Slim\Views\Twig;
  *
  * @package Hatchup\Handlers
  */
-final class Error extends \Slim\Handlers\Error
+final class NotFound extends \Slim\Handlers\NotFound
 {
     /**
      * @var Logger
@@ -37,22 +37,19 @@ final class Error extends \Slim\Handlers\Error
     {
         $this->logger = App::openLog('app.error');
         $this->view = $container['view'];
-
-        parent::__construct();
     }
 
     /**
      * @param ServerRequestInterface   $request
      * @param ResponseInterface        $response
-     * @param \Exception $exception
      *
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, \Exception $exception)
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response)
     {
         // Log the message
-        $this->logger->critical($exception->getMessage());
+        $this->logger->addNotice(sprintf('Page %s was not found', (string)($request->getUri())));
 
-        return $this->view->render($response, 'errors/500.twig')->withStatus(500);
+        return $this->view->render($response, 'errors/404.twig')->withStatus(404);
     }
 }

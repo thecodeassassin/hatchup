@@ -11,15 +11,18 @@ $config = 'config.ini';
 // application specific constants
 require __DIR__ . '/../app/constants.php';
 
+$isDevelopment = (APPLICATION_ENV == 'development');
+
 try {
     if (!is_writable(LOG_DIR)) {
         throw new AppException(sprintf('Cannot write to log dir (%s)', LOG_DIR));
     }
 
-    $app = new App(['debug' => (APPLICATION_ENV == 'development')], $config);
+    $app = new App(['debug' => $isDevelopment], $config);
 
     // Initialize the Routing Manager
     $routingManager = new RoutingManager(
+        $app,
         [
             CONTROLLER_DIR
         ],

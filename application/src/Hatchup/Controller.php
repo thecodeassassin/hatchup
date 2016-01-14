@@ -6,6 +6,7 @@
 namespace Hatchup;
 
 use Elasticsearch\Client;
+use Hatchup\App\Config;
 use Slim\Container;
 use Slim\Http\Request;
 use Slim\Http\Response;
@@ -24,7 +25,7 @@ abstract class Controller
     public $app;
 
     /**
-     * @var array
+     * @var Config
      */
     protected $config;
 
@@ -35,15 +36,16 @@ abstract class Controller
 
     /**
      * Base controller constructor
+     *
+     * @param Container $container
      */
-    public function __construct()
+    public function __construct(Container $container)
     {
-        $this->app = self::getApp();
-        $this->container = $this->app->getContainer();
+        $this->container = $container;
 
         $this->response = $this->container->response;
         $this->request = $this->container->request;
-        $this->config = $this->app->getConfig();
+        $this->config = $this->container['config'];
     }
 
     /**
@@ -63,16 +65,6 @@ abstract class Controller
     public function getElasticSearchClient()
     {
         return $this->container['elasticsearch'];
-    }
-
-    /**
-     * Get the application's kernel (Slim object)
-     *
-     * @return App
-     */
-    protected function getApp()
-    {
-        return \Hatchup\App::getInstance();
     }
 
     /**

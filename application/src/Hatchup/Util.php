@@ -78,4 +78,43 @@ class Util
         }
         return implode($pass); //turn the array into a string
     }
+
+    /**
+     * @param array  $array
+     * @param string $indent
+     *
+     * @return mixed|string
+     */
+    public static function shortExport(array $array)
+    {
+        $indexed = array_keys($array) === range(0, count($array) - 1);
+        $exported = [];
+        foreach ($array as $key => $value) {
+            $exported[] = ($indexed ? '\''.$value.'\'' : $key . " => ". $value);
+        }
+
+        return "[" . implode(",", $exported) . "]";
+    }
+
+    /**
+     * @param     $host
+     * @param     $port
+     * @param int $timeout
+     *
+     * @return bool
+     */
+    public static function checkHostAvailability($host, $port, $timeout = 2)
+    {
+        // Try and connect
+        if ($sock = @fsockopen($host, $port, $errNo, $errStr, $timeout)) {
+            // Connected successfully
+            $up = true;
+            fclose($sock); // Drop connection immediately for tidiness
+        } else {
+            // Connection failed
+            $up = false;
+        }
+
+        return $up;
+    }
 }

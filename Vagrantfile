@@ -34,8 +34,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     ansible.groups = {
       "tag_Group_web" => ["web-001"],
+
+      # set development specific values. We need nginx_sendfile to be off otherwise virtualbox will truncate responses
       "tag_Group_web:vars" => {"php_display_errors" => "On",
-                                   "php_display_startup_errors" => "On"},
+                               "php_display_startup_errors" => "On"
+                               "nginx_sendfile" => "off"
+                              },
       "tag_Group_es" => ["web-001"]
     }
     ansible.playbook = "ansible/playbook.yml"

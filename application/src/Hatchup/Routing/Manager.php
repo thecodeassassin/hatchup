@@ -9,6 +9,11 @@
 
 namespace Hatchup\Routing;
 
+use ReflectionClass;
+use ReflectionMethod;
+use Hatchup\Util;
+use Slim\App;
+
 /**
  * Routing Manager package
  *
@@ -43,13 +48,22 @@ class Manager
      */
     protected $baseNameSpace = '\Hatchup\Controller';
 
+
     /**
+     * @var App
+     */
+    protected $app;
+
+    /**
+     * @param App    $app            Instance of \Slim\App
      * @param array  $controllerDirs array of directories to scan for controllers
      * @param string $cacheDir       directory where to store the cached routes
      * @param null   $routePrefix    Prefix to add to every route (except if they have @noPrefix)
      */
-    public function  __construct(array $controllerDirs, $cacheDir, $routePrefix = null)
+    public function __construct(App $app, array $controllerDirs, $cacheDir, $routePrefix = null)
     {
+
+        $this->app = $app;
 
         // if the directory does not exist, try to create it
         if (!is_dir($cacheDir)) {
@@ -78,7 +92,7 @@ class Manager
     /**
      * Generates a new compiled routes file and includes it into the application
      *
-     * @throws \Exception
+     * @throws Exception
      *
      */
     public function generateRoutes()
@@ -89,11 +103,12 @@ class Manager
         $modTimes = array();
         $classes = $this->controllers;
 
+
+
         // if the cache file does not exist, update the cache
         if (!is_file($this->cacheFile())) {
             $hasChanged = true;
         } else {
-
             // include the cache file and get the mod times variable
             include_once $this->cacheFile();
 
@@ -102,7 +117,6 @@ class Manager
                 $hasChanged = true;
             } else {
                 foreach ($classes as $classFile) {
-
                     // if a controller is modified (any controller) update the cache
                     $modTime = $modTimes[$classFile];
                     $hasChanged = (filemtime($classFile) != $modTime);
@@ -117,12 +131,10 @@ class Manager
 
         // update the cache only if the controllers have changed
         if ($hasChanged) {
-
             foreach ($classes as $classFile) {
                 $content .= $this->processClass($classFile);
             }
-
-            require $this->writeCache($classes, $content);
+            include_once $this->writeCache($classes, $content);
         }
 
     }
@@ -145,7 +157,7 @@ class Manager
      *
      * @return string
      */
-    protected function writeCache($classes = array(), $content)
+    protected function writeCache($classes, $content)
     {
         $modTimes = array();
         foreach ($classes as $classFile) {
@@ -164,7 +176,6 @@ class Manager
  * on {$date}
  */
 \$modTimes = {$modTimes};
-\$app = Hatchup\App::getInstance();
 
 {$content}
 
@@ -179,60 +190,58 @@ EOD;
      * @param $classFile
      *
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
     protected function processClass($classFile)
     {
+
         $content = file_get_contents($classFile);
         $result = '';
 
         preg_match_all('/class\s+(\w*)\s*(extends\s+)?([^{])*/s', $content, $mclass, PREG_SET_ORDER);
         $className = $mclass[0][1];
         if (!$className) {
-            throw new \Exception(sprintf('class not found in %s', $classFile));
+            throw new Exception(sprintf('Class not found in %s', $classFile));
         }
 
-        preg_match_all('|(/\*\*[^{]*?{)|', $content, $match, PREG_PATTERN_ORDER);
+        $refl = new ReflectionClass($this->baseNameSpace.'\\'.$className);
 
-        foreach ($match[0] as $k => $m) {
-            if (!substr_count($m, 'class')) {
-                $function = substr_count($m, 'function') ? 'yes' : 'no';
-                if ($function == 'yes') {
-                    preg_match_all('/(\/\*\*.*\*\/)/s', $m, $mc, PREG_PATTERN_ORDER);
-                    $comments = nl2br($mc[0][0]);
-                    $noPrefix = strpos($comments, '@noPrefix') !== false;
+        $methods = $refl->getMethods();
 
-                    preg_match_all('/\*\/\s+(public\s+)?(static\s+)?function\s+([^\(]*)\(/s', $m, $mf, PREG_SET_ORDER);
+        /** @var ReflectionMethod $method */
+        foreach ($methods as $method) {
+            if (strpos($method->getName(), 'Action')) {
+                $doc = $method->getDocComment();
+                preg_match_all("/\*\s+@([a-zA-z]+)\s*\('([^']*)'\)/s", $doc, $annotations);
 
-                    if (!empty($mf)) {
-                        $functionName = $mf[0][3];
-                        preg_match_all("/\*\s+@Route\s*\('([^']*)'\)/s", $comments, $params, PREG_SET_ORDER);
+                $httpMethods = [];
+                $route = '';
 
-                        foreach ($params as $route) {
-                            if ($this->routePrefix && !$noPrefix) {
-                                // add a prefix if it was given
-                                $route = $this->routePrefix . $route[1];
-
-                            } else {
-                                $route = $route[1];
-                            }
-
-                            preg_match_all("/\*\s+@Method\s*\('([^']*)'\)/s", $comments, $params, PREG_SET_ORDER);
-                            $method = isset($params[0][1]) ? strtoupper($params[0][1]) : 'GET';
-
-                            $result .= str_replace('\\', '\\\\', sprintf(
-                                '$app->map(["%s"], "%s", "%s\%s:%s");' . PHP_EOL,
-                                str_replace(',', '","', $method),
-                                $route,
-                                $this->baseNameSpace,
-                                $className,
-                                $functionName
-                            ));
-                        }
-
+                foreach ($annotations[1] as $idx => $annotation) {
+                    if (strtolower($annotation) == 'route') {
+                        $route = $annotations[2][$idx];
+                    } elseif (strtolower($annotation) == 'method') {
+                        $httpMethods[] = $annotations[2][$idx];
                     }
-
                 }
+
+                if (count($httpMethods) == 0 || empty($route)) {
+                    throw new Exception(
+                        sprintf(
+                            'Method %s has invalid annotations, route or method invalid.',
+                            $method->getName()
+                        )
+                    );
+                }
+
+                $result .= str_replace('\\', '\\\\', sprintf(
+                    '$this->app->map(%s, "%s", "%s\%s:%s");' . PHP_EOL,
+                    Util::shortExport($httpMethods),
+                    $route,
+                    $this->baseNameSpace,
+                    $className,
+                    $method->getName()
+                ));
             }
         }
 

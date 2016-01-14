@@ -36,10 +36,7 @@ I created a script to make it easier to interact with terraform.
 
 *Note* This step might include the consumption of coffee/tea since it WILL take a while.
 
-The script will do two things when running apply:
-
-1. Create the infrastructure in AWS
-2. Provision the infrastructure
+The script will create the infrastructure in AWS when running the apply operation.
 
 ```
 
@@ -48,13 +45,21 @@ $ bash terraform/run.sh apply stephen ~/.ssh/stephen.pub
 
 ```
 
+### Provision
+
+Provisioning is done with Ansible and can be simply called by running the ansible script included in the root directory.
+
+```
+$ ./ansible.sh
+```
+
 ### Destroying the infrastructure
 
 Should you need to destroy all the managed infrastructure (this is considered catastrophic in a live scenario). You need
 to run the same script as above but using the destroy operation.
 
 ```
-$ bash terraform/run.sh destroy stephen ~/.ssh/stephen.pub
+$ ./terraform.sh destroy stephen ~/.ssh/stephen.pub
 ```
 
 

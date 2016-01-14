@@ -6,7 +6,6 @@
 namespace Hatchup;
 
 use Elasticsearch\ClientBuilder;
-use Hatchup\Handlers\NotFound;
 use Monolog\Handler\FingersCrossedHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -52,6 +51,7 @@ class App extends SlimApp
 
         $this->config = Config::getInstance();
 
+        $this->registerHandlers();
         $this->registerServices();
     }
 
@@ -80,11 +80,32 @@ class App extends SlimApp
     {
 
         $filename = LOG_DIR . '/'.$name.'.log';
+        $config = Config::getInstance();
+
+        switch ($config['log_level']) {
+            case 'debug':
+                $logLevel = Logger::DEBUG;
+                break;
+            case 'error':
+                $logLevel = Logger::ERROR;
+                break;
+            case 'info':
+                $logLevel = Logger::INFO;
+                break;
+            case 'warning':
+                $logLevel = Logger::WARNING;
+                break;
+            case 'critical':
+                $logLevel = Logger::CRITICAL;
+                break;
+            default:
+                 $logLevel = Logger::ERROR;
+        }
 
         $logger = new Logger('logger');
 
-        $stream = new StreamHandler($filename, Logger::DEBUG);
-        $fingersCrossed = new FingersCrossedHandler($stream, Logger::ERROR);
+        $stream = new StreamHandler($filename, $logLevel);
+        $fingersCrossed = new FingersCrossedHandler($stream, $logLevel);
 
         $logger->pushHandler($fingersCrossed);
 
@@ -119,7 +140,7 @@ class App extends SlimApp
         // register the app as a singleton
         self::$instance = $this;
 
-        static::openLog('error');
+        static::openLog('app.main');
 
         // Get container
         $container = $this->getContainer();
@@ -137,17 +158,6 @@ class App extends SlimApp
             ));
 
             return $view;
-        };
-
-        // register handlers
-        $container['errorHandler'] = function ($container) {
-            return new Handlers\Error($container['Logger']);
-        };
-
-        $container['notFoundHandler'] = function ($container) {
-            return function ($request, $response) use ($container) {
-                return $container->view->render($response, 'errors/404.twig')->withStatus(404);
-            };
         };
 
         $container['elasticsearch'] = function ($container) use ($config) {
@@ -171,8 +181,37 @@ class App extends SlimApp
                 ->setHosts([$host])
                 ->build();
 
+            if (!Util::checkHostAvailability($config['elasticsearch_host'], $config['elasticsearch_port'])) {
+                throw new \Exception('The Elasticsearch cluster seems to be unavailable.');
+            }
+
             return $client;
         };
+
+        /**
+         * @return Config
+         */
+        $container['config'] = function () use ($config) {
+            return $config;
+        };
+    }
+
+    /**
+     * Register shared handlers
+     */
+    protected function registerHandlers()
+    {
+        $container = $this->getContainer();
+
+        // register handlers
+        $container['errorHandler'] = function ($container) {
+            return new Handlers\Error($container);
+        };
+
+        $container['notFoundHandler'] = function ($container) {
+            return new Handlers\NotFound($container);
+        };
+
     }
 
     /**
